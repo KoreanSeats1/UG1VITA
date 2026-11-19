@@ -111,9 +111,10 @@ A ready-to-copy [settings file](examples/nfsug1vita.cfg) disables rear touch. Co
 `ux0:data/NFSUG1VITA/nfsug1vita.cfg`, or merge its settings into an existing file without duplicating keys.
 
 The right stick is mapped to the game's existing four car-orbit actions in the front end. It has a radial dead
-zone and proportional speed, and releasing the stick sends a stop event. The camera mapping is disabled during
+zone and proportional speed (62.5% faster than the first camera test), and releasing the stick sends a stop event. The camera mapping is disabled during
 races, pause menus and text entry; the race's combined-pedal axis stays centred. Set `garage_camera=off` to
-disable stick-controlled orbiting. **The test VPK still needs verification on the Vita.**
+disable stick-controlled orbiting. The first build's orbit controls were confirmed working on the Vita;
+the increased speed still needs a device check.
 
 Control checks on macOS/Linux: `sh tools/test-controls.sh` (set `VITASDK` if the SDK is not in `.deps/vitasdk`).
 These simulate pad/touch samples and check D-pad shifting inputs, rear-touch opt-in, camera directions and speed.

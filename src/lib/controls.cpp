@@ -376,7 +376,8 @@ CameraState garageCamera(float x, float y)
     for (int direction = 0; direction < CameraDirectionCount; ++direction)
     {
         const float amount = std::fmax(0.0f, std::fmin(1.0f, amounts[direction]));
-        state.strength[direction] = uint8_t(std::lround(amount * 128.0f));
+        // 208 / 128 = 1.625: 62.5% faster than the first camera build, with the same dead zone and curve.
+        state.strength[direction] = uint8_t(std::lround(amount * 208.0f));
         if (state.strength[direction])
             state.buttons |= 1u << CameraButtons[direction];
     }

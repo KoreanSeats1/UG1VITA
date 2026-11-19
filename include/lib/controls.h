@@ -126,7 +126,7 @@ inline constexpr uint32_t CameraButtonMask = (1u << 4) | (1u << 5) | (1u << 10) 
 struct CameraState
 {
     uint32_t buttons;
-    uint8_t strength[CameraDirectionCount]; // 0 released, 1..128 proportional movement (game default: 128)
+    uint8_t strength[CameraDirectionCount]; // 0 released, 1..208 proportional movement (game default: 128)
 };
 CameraState garageCamera(float x, float y);
 

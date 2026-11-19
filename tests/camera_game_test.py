@@ -71,6 +71,7 @@ def check(path):
         mask = joystick_mask({button})
         assert not (int.from_bytes(mask, 'little') & (1 << action)), 'pad did not activate camera action'
         assert scan(config, mask, 128) == (128 << 8) | event, 'full camera movement event missing'
+        assert scan(config, mask, 208) == (208 << 8) | event, 'faster camera movement event missing'
         assert scan(config, mask, 64) == (64 << 8) | event, 'changed stick speed did not reach game'
         assert scan(config, mask, 64) == 0, 'unchanged held input should not duplicate events'
         assert scan(config, joystick_mask(set()), 0) == event, 'release event did not stop camera'

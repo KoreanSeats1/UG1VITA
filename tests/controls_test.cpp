@@ -90,7 +90,7 @@ int main(int argc, char** argv)
         assert(amount == 0);
     camera = garageCamera(1.0f, 0.0f);
     assert(camera.buttons == (1u << CameraButtons[CameraRight]));
-    assert(camera.strength[CameraRight] == 128);
+    assert(camera.strength[CameraRight] == 208);
     camera = garageCamera(-1.0f, 0.0f);
     assert(camera.buttons == (1u << CameraButtons[CameraLeft]));
     camera = garageCamera(0.0f, -1.0f);
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
     camera = garageCamera(0.0f, 1.0f);
     assert(camera.buttons == (1u << CameraButtons[CameraDown]));
     camera = garageCamera(0.4f, 0.0f);
-    assert(camera.strength[CameraRight] > 0 && camera.strength[CameraRight] < 128);
+    assert(camera.strength[CameraRight] > 0 && camera.strength[CameraRight] < 208);
     camera = garageCamera(1.0f, -1.0f);
     assert(camera.buttons == ((1u << CameraButtons[CameraRight]) | (1u << CameraButtons[CameraUp])));
     assert(camera.strength[CameraRight] == camera.strength[CameraUp]);
