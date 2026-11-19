@@ -125,10 +125,14 @@ directions, neutral-stick drift, race/pause transitions, and D-pad shifts in a d
 
 This branch includes upstream's `d1a482f` fix from
 [playtest-hotfix](https://github.com/NDRWhun/UG1VITA/releases/tag/playtest-hotfix). It corrects the GPU offsets for the
-single-level cube texture used by car reflections. If an original playtest build shows purple/white car paint, test
-[Hotfix 2](https://github.com/NDRWhun/UG1VITA/releases/tag/playtest-hotfix-2) first; it includes that correction.
-If the problem persists on Hotfix 2, capture the installed release name, game region, affected car/paint, and a
-screenshot before changing the renderer further. The washed-out garage background is a separate known issue.
+single-level cube texture used by car reflections.
+
+The [current Vita Alive entry](https://github.com/VegettoSan/PSVitaAlive/blob/main/apps/need-for-speed-underground.json)
+distributes Hotfix 2. Its downloaded `eboot.bin` and `glyphs.bin` match the official Hotfix 2 release byte-for-byte
+(checked November 19, 2026). Purple/white reflections on car bodies in races and customization have been reported
+on the latest Vita Alive version; this is unresolved, not confirmed fixed by the existing upstream correction.
+Next steps are to verify the installed binary, record the game region and affected car/paint, and reproduce it
+from a screenshot/log before changing the renderer. The washed-out garage background is a separate known issue.
 
 ## Known issues
 
