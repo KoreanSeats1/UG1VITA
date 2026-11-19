@@ -98,7 +98,7 @@ menu_widescreen=off
 | `hud_widescreen` | `on` (default), `off` | Race HUD at the screen edges, or centred at 4:3 |
 | `button_prompts` | `vita` (default), `pc` | Vita buttons on screen, or the original PC keys |
 | `rear_touch` | `off` (default), `on` | Enable the rear touch pad for shifting; D-pad up/down still shifts with it off |
-| `garage_camera` | `on` (default), `off` | Pass horizontal right-stick input to the front end (camera test change; see below) |
+| `garage_camera` | `on` (default), `off` | Map the right stick to the car-orbit controls in Customize Ride and car-selection menus |
 | `car_reflection_interval` | `1` (default) to `6` | Higher values update the car reflections less often, for more speed |
 
 ### This fork's control changes
@@ -110,15 +110,17 @@ the game. Settings are read at startup; the game's controls screen does not save
 A ready-to-copy [settings file](examples/nfsug1vita.cfg) disables rear touch. Copy it to
 `ux0:data/NFSUG1VITA/nfsug1vita.cfg`, or merge its settings into an existing file without duplicating keys.
 
-The camera test change restores the discarded right-stick X input on the EMS adapter's Z axis, shapes both right
-stick directions together, and keeps Z centred during races and pause menus because the race uses it as a combined
-pedal. **Garage camera rotation still needs verification in the game.** Axis delivery alone does not establish
-whether the game's front-end bindings consume it; do not treat this as a verified camera fix. Set `garage_camera=off`
-to restore the previous horizontal-axis behaviour.
+The right stick is mapped to the game's existing four car-orbit actions in the front end. It has a radial dead
+zone and proportional speed, and releasing the stick sends a stop event. The camera mapping is disabled during
+races, pause menus and text entry; the race's combined-pedal axis stays centred. Set `garage_camera=off` to
+disable stick-controlled orbiting. **The test VPK still needs verification on the Vita.**
 
 Control checks on macOS/Linux: `sh tools/test-controls.sh` (set `VITASDK` if the SDK is not in `.deps/vitasdk`).
-These simulate pad/touch samples and check D-pad shifting inputs, rear-touch opt-in, and both right-stick axes;
-they do not verify the game's camera bindings. Before releasing a custom VPK, test garage rotation in both
+These simulate pad/touch samples and check D-pad shifting inputs, rear-touch opt-in, camera directions and speed.
+`python3 tests/camera_game_test.py binaries/Speed.exe` also exercises the original game's joystick-mask builder
+and camera event scanners using your own executable (requires `unicorn==2.1.4`, which can be installed into
+`.pydeps`). It checks all four directions, proportional movement, diagonal input and release events.
+Before releasing a custom VPK, test garage rotation in both
 directions, neutral-stick drift, race/pause transitions, and D-pad shifts in a drag race on the Vita.
 
 ### Corrupted car reflections

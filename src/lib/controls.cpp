@@ -157,7 +157,7 @@ uint32_t buttonMask(Input input)
     return mask;
 }
 
-// The adapter's four axes: X, Y (left stick), Z (right stick X in the front end) and Rz (right stick Y).
+// The adapter's four axes: X, Y (left stick), Z (combined pedal) and Rz (right stick Y).
 bool axisPresent(Axis axis)
 {
     return axis == AxisX || axis == AxisY || axis == AxisZ || axis == AxisRz;
@@ -366,6 +366,21 @@ void shapeStick(float x, float y, uint32_t deadZone, uint32_t saturation, float*
     const float scale = (s_stickLinear * t + (1.0f - s_stickLinear) * t * t * t) / magnitude;
     *outX = std::fmax(-1.0f, std::fmin(1.0f, x * scale));
     *outY = std::fmax(-1.0f, std::fmin(1.0f, y * scale));
+}
+
+CameraState garageCamera(float x, float y)
+{
+    shapeStick(x, y, 0, 10000, &x, &y);
+    const float amounts[CameraDirectionCount] = { -y, y, -x, x };
+    CameraState state = {};
+    for (int direction = 0; direction < CameraDirectionCount; ++direction)
+    {
+        const float amount = std::fmax(0.0f, std::fmin(1.0f, amounts[direction]));
+        state.strength[direction] = uint8_t(std::lround(amount * 128.0f));
+        if (state.strength[direction])
+            state.buttons |= 1u << CameraButtons[direction];
+    }
+    return state;
 }
 
 }}

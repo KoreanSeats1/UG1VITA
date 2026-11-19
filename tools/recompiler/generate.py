@@ -30,6 +30,9 @@ from disasm import analysis, codegen, discover, fpustack, image as pe_image, wri
 
 EXE_NAME = 'Speed.exe'
 EXE_SHA256 = 'c0fad450912952f53809a54690d235aa8b4e25b9f46650693c7cbee1b4c074b7'
+# Version 1.4 executable used by the tested Vita installation. Its .rdata and .data match the US layout;
+# the same instruction-by-instruction patch checks and complete code-discovery checks apply to both files.
+EXE_SHA256_ALTERNATES = {'35654f401383be9af0dbff0d11a92220a17579a01030005de6943e63e03f460f'}
 MODULE = 'nfsu'
 
 # MSVC CRT setjmp (_setjmp3) and the indirect jump in longjmp that resumes after it. Calls to setjmp save a host
@@ -252,7 +255,7 @@ def check_binary(directory):
     # Checked before parsing: other files are refused whatever they contain.
     with open(path, 'rb') as f:
         sha256 = hashlib.sha256(f.read()).hexdigest()
-    if sha256 != EXE_SHA256:
+    if sha256 != EXE_SHA256 and sha256 not in EXE_SHA256_ALTERNATES:
         sys.exit('%s: SHA-256 %s, expected %s' % (path, sha256, EXE_SHA256))
     return pe_image.Image(path)
 

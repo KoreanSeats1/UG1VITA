@@ -53,8 +53,8 @@ bool characterKey(char c, KeyCode* key, bool* shift);
 const KeyCode& shiftKey();
 
 // DIJOYSTATE axis slots (lX, lY, lZ, lRx, lRy, lRz, two sliders): the joystick has X, Y (left stick), Z (the
-// adapter's combined pedal / right stick X) and Rz (right stick Y). The game poll hook keeps Z centred outside
-// the front end so that rotating the right stick cannot operate the race's combined pedal.
+// adapter's combined pedal) and Rz (right stick Y). Mapper temporarily carries right stick X in Z for the game
+// poll hook's garage-camera mapping; the hook centres Z before it reaches DirectInput's combined pedal.
 enum Axis
 {
     AxisX, AxisY, AxisZ, AxisRx, AxisRy, AxisRz, AxisSlider0, AxisSlider1,
@@ -117,6 +117,18 @@ private:
 // property values (0..10000 of full deflection); the larger dead zone and the smaller saturation of these and the
 // stick's own apply.
 void shapeStick(float x, float y, uint32_t deadZone, uint32_t saturation, float* outX, float* outY);
+
+// The front end reuses otherwise unassigned buttons for the game's digital car-orbit actions. Rear shift
+// buttons 4/5 are available in menus; 10/11 have no physical input. Never add these camera buttons in a race.
+enum CameraDirection { CameraUp, CameraDown, CameraLeft, CameraRight, CameraDirectionCount };
+inline constexpr int CameraButtons[CameraDirectionCount] = { 4, 5, 10, 11 };
+inline constexpr uint32_t CameraButtonMask = (1u << 4) | (1u << 5) | (1u << 10) | (1u << 11);
+struct CameraState
+{
+    uint32_t buttons;
+    uint8_t strength[CameraDirectionCount]; // 0 released, 1..128 proportional movement (game default: 128)
+};
+CameraState garageCamera(float x, float y);
 
 }
 

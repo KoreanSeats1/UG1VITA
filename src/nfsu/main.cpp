@@ -323,10 +323,18 @@ static void padPollHook(x86::reg32* buttons, int* pov, float* axes)
     const bool driving = win32::g_guestBase[0x007041C4] == 0;
     const bool frontEnd = guestDword(0x0077A920) == 3;   // GAMEFLOW_STATE_IN_FRONTEND
     static const bool garageCamera = pf::Config::getBool("garage_camera", true);
-    // The EMS adapter's second stick is Z/Rz. Z used to be forced to zero, discarding horizontal camera input.
-    // In a race the same Z axis is a combined pedal, so continue to report it centred there and in pause menus.
-    if (!garageCamera || !frontEnd || driving || guestDword(0x007363A8))
-        axes[win32::controls::AxisZ] = 0.0f;
+    const bool orbit = garageCamera && frontEnd && !driving && !guestDword(0x007363A8);
+    namespace controls = win32::controls;
+    const controls::CameraState camera = controls::garageCamera(orbit ? axes[controls::AxisZ] : 0.0f,
+                                                               orbit ? axes[controls::AxisRz] : 0.0f);
+    // Existing scanner configs: up/down/left/right events 0x3C/0x3D/0x3A/0x3B, action bits 29..32. The byte
+    // at +0x14 is the held-event strength; updating it also emits a new event when a held stick changes speed.
+    for (int direction = 0; direction < controls::CameraDirectionCount; ++direction)
+        win32::g_guestBase[0x00703B74 + 0x20 * direction] = camera.strength[direction];
+    if (frontEnd)
+        *buttons = (*buttons & ~controls::CameraButtonMask) | camera.buttons;
+    // Z is the race's combined pedal, not the garage-camera action. Never forward right stick X to that pedal.
+    axes[controls::AxisZ] = 0.0f;
     const bool race = driving || frontEnd;
     const bool menu = !driving;
     const bool vinylColours = menu && vinylLayerScreen();
@@ -338,7 +346,12 @@ static void padPollHook(x86::reg32* buttons, int* pov, float* axes)
         for (x86::reg32 i = 0; i < 16; ++i)
         {
             guestDword(slot + 0x18 + 4 * i) = race ? s_raceActions[i] : 0;
-            guestDword(slot + 0x98 + 4 * i) = !menu ? 0 : vinylColours && i == 0 ? 21 : s_menuActions[i];
+            x86::reg32 menuAction = !menu ? 0 : vinylColours && i == 0 ? 21 : s_menuActions[i];
+            if (orbit)
+                for (int direction = 0; direction < controls::CameraDirectionCount; ++direction)
+                    if (i == x86::reg32(controls::CameraButtons[direction]))
+                        menuAction = 29 + direction;
+            guestDword(slot + 0x98 + 4 * i) = menuAction;
         }
         for (x86::reg32 i = 0; i < 16; ++i)
         {

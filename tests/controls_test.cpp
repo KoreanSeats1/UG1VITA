@@ -82,5 +82,27 @@ int main(int argc, char** argv)
     assert(state.axes[AxisZ] == -1); // left must survive the mapper too
     shapeStick(state.axes[AxisZ], state.axes[AxisRz], 0, 10000, &x, &y);
     assert(x < -0.99f);
+
+    // Garage input has to activate the car-orbit actions, not just expose a joystick axis.
+    CameraState camera = garageCamera(0.0039f, 0.0039f);
+    assert(camera.buttons == 0);
+    for (uint8_t amount : camera.strength)
+        assert(amount == 0);
+    camera = garageCamera(1.0f, 0.0f);
+    assert(camera.buttons == (1u << CameraButtons[CameraRight]));
+    assert(camera.strength[CameraRight] == 128);
+    camera = garageCamera(-1.0f, 0.0f);
+    assert(camera.buttons == (1u << CameraButtons[CameraLeft]));
+    camera = garageCamera(0.0f, -1.0f);
+    assert(camera.buttons == (1u << CameraButtons[CameraUp]));
+    camera = garageCamera(0.0f, 1.0f);
+    assert(camera.buttons == (1u << CameraButtons[CameraDown]));
+    camera = garageCamera(0.4f, 0.0f);
+    assert(camera.strength[CameraRight] > 0 && camera.strength[CameraRight] < 128);
+    camera = garageCamera(1.0f, -1.0f);
+    assert(camera.buttons == ((1u << CameraButtons[CameraRight]) | (1u << CameraButtons[CameraUp])));
+    assert(camera.strength[CameraRight] == camera.strength[CameraUp]);
+    camera = garageCamera(0.0f, 0.0f);
+    assert(camera.buttons == 0 && camera.strength[CameraRight] == 0); // release must stop rotation
     std::puts(rear ? "controls: rear-touch opt-in passed" : "controls: rear-touch-off and stick/d-pad checks passed");
 }

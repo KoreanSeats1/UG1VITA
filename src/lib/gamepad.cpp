@@ -350,8 +350,8 @@ x86::reg32 Gamepad::getDeviceType8() const
     return 0x0215;
 }
 
-// Each stick is shaped as a pair: X/Y with the properties of X, Z/Rz with the properties of Rz. The game's poll
-// hook can centre Z outside the front end, keeping the race's combined pedal inactive.
+// The left stick is shaped as a whole with the properties of X, the right stick's Rz on its own. The game's poll
+// hook consumes horizontal right-stick input for the garage and centres Z before the combined pedal is reported.
 void Gamepad::getState(x86::reg32* buttons, x86::sreg32 (&axes)[controls::AxisCount], int* pov)
 {
     controls::State state;
@@ -367,8 +367,9 @@ void Gamepad::getState(x86::reg32* buttons, x86::sreg32 (&axes)[controls::AxisCo
     controls::shapeStick(state.axes[controls::AxisX], state.axes[controls::AxisY], left.deadZone, left.saturation,
                          &shaped[controls::AxisX], &shaped[controls::AxisY]);
     const AxisProperties& right = m_axisProperties[controls::AxisRz];
-    controls::shapeStick(state.axes[controls::AxisZ], state.axes[controls::AxisRz], right.deadZone, right.saturation,
-                         &shaped[controls::AxisZ], &shaped[controls::AxisRz]);
+    float unused;
+    controls::shapeStick(state.axes[controls::AxisRz], 0.0f, right.deadZone, right.saturation,
+                         &shaped[controls::AxisRz], &unused);
     *pov = state.pov;
     *buttons = state.buttons;
     for (int axis = 0; axis < controls::AxisCount; ++axis)
