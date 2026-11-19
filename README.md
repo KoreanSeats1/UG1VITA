@@ -129,10 +129,9 @@ single-level cube texture used by car reflections.
 
 The [current Vita Alive entry](https://github.com/VegettoSan/PSVitaAlive/blob/main/apps/need-for-speed-underground.json)
 distributes Hotfix 2. Its downloaded `eboot.bin` and `glyphs.bin` match the official Hotfix 2 release byte-for-byte
-(checked November 19, 2026). Purple/white reflections on car bodies in races and customization have been reported
-on the latest Vita Alive version; this is unresolved, not confirmed fixed by the existing upstream correction.
-Next steps are to verify the installed binary, record the game region and affected car/paint, and reproduce it
-from a screenshot/log before changing the renderer. The washed-out garage background is a separate known issue.
+(checked November 19, 2026). Updating to the current Vita Alive version resolved the reported purple/white car
+reflections during races and customization. No additional renderer change is needed for that report. The
+washed-out garage background is a separate known issue.
 
 ## Known issues
 
