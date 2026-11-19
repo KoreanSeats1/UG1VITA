@@ -314,7 +314,7 @@ static bool vinylLayerScreen()
     return true;
 }
 
-static void padPollHook(x86::reg32* buttons, int* pov)
+static void padPollHook(x86::reg32* buttons, int* pov, float* axes)
 {
     pollTextField();
     nfsu::bench::poll();
@@ -322,6 +322,11 @@ static void padPollHook(x86::reg32* buttons, int* pov)
     const x86::reg32 slots = 0x0078DAA8, slotSize = 0x270, slotCount = 6;
     const bool driving = win32::g_guestBase[0x007041C4] == 0;
     const bool frontEnd = guestDword(0x0077A920) == 3;   // GAMEFLOW_STATE_IN_FRONTEND
+    static const bool garageCamera = pf::Config::getBool("garage_camera", true);
+    // The EMS adapter's second stick is Z/Rz. Z used to be forced to zero, discarding horizontal camera input.
+    // In a race the same Z axis is a combined pedal, so continue to report it centred there and in pause menus.
+    if (!garageCamera || !frontEnd || driving || guestDword(0x007363A8))
+        axes[win32::controls::AxisZ] = 0.0f;
     const bool race = driving || frontEnd;
     const bool menu = !driving;
     const bool vinylColours = menu && vinylLayerScreen();

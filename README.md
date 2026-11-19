@@ -97,8 +97,38 @@ menu_widescreen=off
 | `menu_widescreen` | `on` (default), `off` | Menus laid out for the wide screen, or centred at 4:3 |
 | `hud_widescreen` | `on` (default), `off` | Race HUD at the screen edges, or centred at 4:3 |
 | `button_prompts` | `vita` (default), `pc` | Vita buttons on screen, or the original PC keys |
-| `rear_touch` | `on` (default), `off` | Gear shifting on the rear touch pad |
+| `rear_touch` | `off` (default), `on` | Enable the rear touch pad for shifting; D-pad up/down still shifts with it off |
+| `garage_camera` | `on` (default), `off` | Pass horizontal right-stick input to the front end (camera test change; see below) |
 | `car_reflection_interval` | `1` (default) to `6` | Higher values update the car reflections less often, for more speed |
+
+### This fork's control changes
+
+Rear touch is disabled by default. D-pad **up** shifts up and **down** shifts down in drag races and with manual
+transmission. D-pad navigation in menus is unchanged. To turn rear shifting back on, set `rear_touch=on` and restart
+the game. Settings are read at startup; the game's controls screen does not save custom pad bindings in this port.
+
+A ready-to-copy [settings file](examples/nfsug1vita.cfg) disables rear touch. Copy it to
+`ux0:data/NFSUG1VITA/nfsug1vita.cfg`, or merge its settings into an existing file without duplicating keys.
+
+The camera test change restores the discarded right-stick X input on the EMS adapter's Z axis, shapes both right
+stick directions together, and keeps Z centred during races and pause menus because the race uses it as a combined
+pedal. **Garage camera rotation still needs verification in the game.** Axis delivery alone does not establish
+whether the game's front-end bindings consume it; do not treat this as a verified camera fix. Set `garage_camera=off`
+to restore the previous horizontal-axis behaviour.
+
+Control checks on macOS/Linux: `sh tools/test-controls.sh` (set `VITASDK` if the SDK is not in `.deps/vitasdk`).
+These simulate pad/touch samples and check D-pad shifting inputs, rear-touch opt-in, and both right-stick axes;
+they do not verify the game's camera bindings. Before releasing a custom VPK, test garage rotation in both
+directions, neutral-stick drift, race/pause transitions, and D-pad shifts in a drag race on the Vita.
+
+### Corrupted car reflections
+
+This branch includes upstream's `d1a482f` fix from
+[playtest-hotfix](https://github.com/NDRWhun/UG1VITA/releases/tag/playtest-hotfix). It corrects the GPU offsets for the
+single-level cube texture used by car reflections. If an original playtest build shows purple/white car paint, test
+[Hotfix 2](https://github.com/NDRWhun/UG1VITA/releases/tag/playtest-hotfix-2) first; it includes that correction.
+If the problem persists on Hotfix 2, capture the installed release name, game region, affected car/paint, and a
+screenshot before changing the renderer further. The washed-out garage background is a separate known issue.
 
 ## Known issues
 

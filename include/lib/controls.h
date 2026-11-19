@@ -53,7 +53,8 @@ bool characterKey(char c, KeyCode* key, bool* shift);
 const KeyCode& shiftKey();
 
 // DIJOYSTATE axis slots (lX, lY, lZ, lRx, lRy, lRz, two sliders): the joystick has X, Y (left stick), Z (the
-// adapter's combined pedal, held centred: the buttons drive throttle and brake) and Rz (right stick Y).
+// adapter's combined pedal / right stick X) and Rz (right stick Y). The game poll hook keeps Z centred outside
+// the front end so that rotating the right stick cannot operate the race's combined pedal.
 enum Axis
 {
     AxisX, AxisY, AxisZ, AxisRx, AxisRy, AxisRz, AxisSlider0, AxisSlider1,

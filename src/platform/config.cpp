@@ -23,6 +23,7 @@ const char* const Known[] =
 {
     // Player settings.
     "widescreen", "hud_widescreen", "menu_widescreen", "button_prompts", "fit_4_3", "frame_rate", "car_reflection_interval", "rear_touch",
+    "garage_camera",
     // Cores, logs and the benchmark.
     "use_core3", "core3_tasks", "timing_log", "timing_phases", "hitch_log", "console_log",
     "benchmark", "benchmark_exit", "benchmark_seconds", "benchmark_laps", "benchmark_opponents", "benchmark_track",

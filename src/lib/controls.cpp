@@ -157,7 +157,7 @@ uint32_t buttonMask(Input input)
     return mask;
 }
 
-// The adapter's four axes: X, Y (left stick), Z (combined pedal, held centred) and Rz (right stick Y).
+// The adapter's four axes: X, Y (left stick), Z (right stick X in the front end) and Rz (right stick Y).
 bool axisPresent(Axis axis)
 {
     return axis == AxisX || axis == AxisY || axis == AxisZ || axis == AxisRz;
@@ -219,13 +219,13 @@ static const PadButton s_padButtons[] =
 };
 
 static bool s_touchReady = false;
-static bool s_rearTouch = true;
+static bool s_rearTouch = false;
 
-// Setting rear_touch (on by default) turns the rear touch inputs off.
+// Rear touch is opt-in; the d-pad's up/down buttons already shift without it.
 static void initTouch()
 {
     s_touchReady = true;
-    s_rearTouch = pf::Config::getBool("rear_touch", true);
+    s_rearTouch = pf::Config::getBool("rear_touch", false);
     if (s_rearTouch)
         sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, SCE_TOUCH_SAMPLING_STATE_START);
 }
@@ -336,7 +336,7 @@ State Mapper::update(const PadSample& pad, uint64_t nowUs)
 
     state.axes[AxisX] = pad.sticks[0];
     state.axes[AxisY] = pad.sticks[1];
-    state.axes[AxisZ] = 0.0f;
+    state.axes[AxisZ] = pad.sticks[2];
     state.axes[AxisRz] = pad.sticks[3];
 
     // Hat 0 follows the d-pad: hundredths of a degree clockwise from up, -1 when centred.
