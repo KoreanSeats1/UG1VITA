@@ -1,6 +1,7 @@
 #include "prompts.h"
 
 #include <lib/controls.h>
+#include <lib/guest.h>
 #include <lib/memmap.h>
 #include <platform/config.h>
 #include <platform/log.h>
@@ -189,7 +190,7 @@ const KeyCap s_keyCaps[] =
 {
     { 0x001AEF69, Cross,  "PC_X" },
     { 0xC5172FE2, Circle, "PC_BACK" },
-    { 0xC51FBF74, 0,        "PC_QUIT" },
+    { 0xC51FBF74, Square,   "PC_QUIT" },
     { 0x6B6AB9EC, Triangle, "PC_CUSTOM" },
     { 0x8CF52B6B, Triangle, "PC_RACEOP" },
     { 0x04BDFDA3, Triangle, "PC_PERFORMANCE" },
@@ -548,6 +549,27 @@ const ItemKey s_triangleItems[] =
 };
 
 char s_pendingKey = 0;
+reg32 s_quitTag = 0, s_rearLabels[3] = {};
+bool s_controlsFooter = false, s_canToggleRear = false, s_rearSaveFailed = false;
+
+bool controlsScreen()
+{
+    return guestNameIs(CurrentScreen, "pc_joypad_config.fng")
+        || guestNameIs(CurrentScreen, "pc_keyboard_config.fng")
+        || guestNameIs(CurrentScreen, "pc_wheel_config.fng");
+}
+
+bool wideStringIs(reg32 object, const char* text)
+{
+    const reg32 string = ld32(object + 0x60);
+    const size_t length = strlen(text);
+    if (!valid(string, reg32((length + 1) * 2)))
+        return false;
+    for (size_t i = 0; i <= length; ++i)
+        if (ld16(string + reg32(i * 2)) != static_cast<unsigned char>(text[i]))
+            return false;
+    return true;
+}
 
 // Joystick object names on the controls screen (button order of src/lib/controls.cpp, axes X, Y, Z, Rx, Ry, Rz).
 const char s_cross[] = { char(Cross), 0 }, s_circle[] = { char(Circle), 0 }, s_square[] = { char(Square), 0 },
@@ -583,6 +605,7 @@ void configure()
         return;
     }
     s_on = true;
+    s_quitTag = ld32(MenuBarTags);
     for (int item : s_hiddenItems)
         st32(MenuBarTags + 4 * item, 0);
     s_stringMemory = new win32::MemMap(4096, win32::MemMap::High);
@@ -592,6 +615,14 @@ void configure()
         const size_t length = strlen(s.text) + 1;
         memcpy(win32::g_guestBase + at, s.text, length);
         s.address = at;
+        at += reg32((length + 3) & ~size_t(3));
+    }
+    const char* const labels[] = { "REAR TOUCH: OFF", "REAR TOUCH: ON", "REAR TOUCH: ERROR" };
+    for (int i = 0; i < 3; ++i)
+    {
+        s_rearLabels[i] = at;
+        const size_t length = strlen(labels[i]) + 1;
+        memcpy(win32::g_guestBase + at, labels[i], length);
         at += reg32((length + 3) & ~size_t(3));
     }
     win32::controls::setObjectNames(s_buttonNames, 16, s_axisNames);
@@ -657,6 +688,96 @@ void menuTriangle()
         return;
     win32::g_guestBase[MenuBarKey] = reg8(key);
     s_pendingKey = key;
+}
+
+bool menuSquare(bool pressed)
+{
+    if (!s_on || !s_controlsFooter || !s_canToggleRear || !controlsScreen() || ld32(TextEditing))
+        return false;
+    if (pressed)
+    {
+        namespace controls = win32::controls;
+        const bool old = controls::rearTouchEnabled();
+        s_rearSaveFailed = !controls::setRearTouchEnabled(!old);
+        if (!s_rearSaveFailed && !pf::Config::setBool("rear_touch", !old))
+        {
+            controls::setRearTouchEnabled(old);
+            s_rearSaveFailed = true;
+        }
+        if (s_rearSaveFailed)
+            pf::logError("controls menu: rear-touch change failed");
+    }
+    return true;
+}
+
+// Called at the start of the game's menu-bar update (0x4E7600), before it rebuilds and lays out the footer.
+// Reuse its normally hidden Quit artwork only on Controls. Its old keyboard/mouse activation is disabled
+// below; the new action is handled directly by menuSquare and never synthesizes Q.
+void prepareMenuBar(win32::WinApplication* app, x86::CPU& cpu, reg32 bar)
+{
+    if (!s_on || !valid(bar, 0x15c))
+        return;
+    const bool active = controlsScreen();
+    st32(MenuBarTags, active ? s_quitTag : 0);
+    if (active != s_controlsFooter)
+    {
+        st32(0x0078EAF8, 1); // rebuild the existing footer when entering/leaving Controls
+        s_controlsFooter = active;
+        s_rearSaveFailed = false;
+    }
+    s_canToggleRear = false;
+    if (!active)
+        return;
+
+    const x86::CPU saved = cpu;
+    // The Controls class at resource-record +0x14: +0x80 waits for a binding; +0x88 opens its dialog.
+    cpu.eax = CurrentScreen;
+    cpu.esp -= 4;
+    st32(cpu.esp, 0x00746104);
+    ::native::callGuest(app, cpu, 0x4f3f90);
+    const reg32 controller = valid(cpu.eax, 0x18) ? ld32(cpu.eax + 0x14) : 0;
+    if (valid(controller, 0xa0) && ld32(controller) == 0x006CBF14)
+        s_canToggleRear = !ld8(controller + 0x80) && !ld8(controller + 0x88);
+
+    cpu.eax = 0x006C3BF0; // PC_menubar.fng
+    ::native::callGuest(app, cpu, 0x4f65d0);
+    if (cpu.eax)
+    {
+        cpu.edx = cpu.eax;
+        cpu.ecx = 0x548F2015; // Quit_text, an existing FEString using the original game's font
+        ::native::callGuest(app, cpu, 0x4ffb70);
+        const reg32 object = cpu.eax;
+        const reg32 label = s_rearLabels[s_rearSaveFailed ? 2 : win32::controls::rearTouchEnabled() ? 1 : 0];
+        if (valid(object, 0x68) && ld32(object + 0x18) == 2
+            && !wideStringIs(object, reinterpret_cast<const char*>(win32::g_guestBase + label)))
+        {
+            // FEString's own setter converts the text and manages its allocation. Mark it dirty as FEPrintf does.
+            cpu.esp -= 8;
+            st32(cpu.esp, object);
+            st32(cpu.esp + 4, label);
+            ::native::callGuest(app, cpu, 0x41f060);
+            st32(object + 0x1c, ld32(object + 0x1c) | 2);
+            st32(0x0078EAF8, 1);
+        }
+    }
+    const bool terminated = cpu.terminate;
+    cpu = saved;
+    cpu.terminate |= terminated;
+}
+
+void finishMenuBar(reg32 bar)
+{
+    if (!s_on || !valid(bar, 0x15c))
+        return;
+    const reg32 count = ld32(bar + 0x40);
+    if (count > 16)
+        return;
+    for (reg32 i = 0; i < count; ++i)
+    {
+        const reg32 object = ld32(bar + 0x44 + i * 4);
+        if (valid(object, 0x14) && ld32(object + 0x10) == 0x46FCE6DD) // Quit_button
+            win32::g_guestBase[bar + 0x144 + i] = 0;
+    }
 }
 
 }}

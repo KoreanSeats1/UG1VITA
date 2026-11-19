@@ -220,6 +220,7 @@ static const PadButton s_padButtons[] =
 
 static bool s_touchReady = false;
 static bool s_rearTouch = false;
+static bool s_waitForRearRelease = false;
 
 // Rear touch is opt-in; the d-pad's up/down buttons already shift without it.
 static void initTouch()
@@ -228,6 +229,25 @@ static void initTouch()
     s_rearTouch = pf::Config::getBool("rear_touch", false);
     if (s_rearTouch)
         sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, SCE_TOUCH_SAMPLING_STATE_START);
+}
+
+bool rearTouchEnabled()
+{
+    if (!s_touchReady)
+        initTouch();
+    return s_rearTouch;
+}
+
+bool setRearTouchEnabled(bool enabled)
+{
+    if (rearTouchEnabled() == enabled)
+        return true;
+    if (sceTouchSetSamplingState(SCE_TOUCH_PORT_BACK, enabled ? SCE_TOUCH_SAMPLING_STATE_START
+                                                           : SCE_TOUCH_SAMPLING_STATE_STOP) < 0)
+        return false;
+    s_rearTouch = enabled;
+    s_waitForRearRelease = enabled;
+    return true;
 }
 
 static float stickValue(unsigned char raw)
@@ -258,8 +278,11 @@ PadSample readPad()
     SceTouchData touch;
     if (s_rearTouch && sceTouchPeek(SCE_TOUCH_PORT_BACK, &touch, 1) >= 0)
     {
-        for (SceUInt32 i = 0; i < touch.reportNum && i < SCE_TOUCH_MAX_REPORT; ++i)
-            sample.inputs |= bit(touch.report[i].x < s_panelCentreX ? RearLeft : RearRight);
+        if (touch.reportNum == 0)
+            s_waitForRearRelease = false;
+        if (!s_waitForRearRelease)
+            for (SceUInt32 i = 0; i < touch.reportNum && i < SCE_TOUCH_MAX_REPORT; ++i)
+                sample.inputs |= bit(touch.report[i].x < s_panelCentreX ? RearLeft : RearRight);
     }
     return sample;
 }

@@ -62,6 +62,7 @@ NATIVE_OVERRIDES = [
     0x58e810,   # track map draw: the whole map at its place
     0x4f3030,   # FE mouse pointer draw: keeps the pointer state, draws nothing (no pointer on the Vita)
     0x409cd0,   # FE background view: cleared first on the magazine screen
+    0x4e7600,   # native Controls footer: rear-touch toggle using the game's existing menu-bar assets
     # D3DX (include/winapi/d3dx9.h): effects without the guest HLSL compiler; the math entries are jumps through
     # the PSGP dispatch table.
     0x5af9e5,   # D3DXCreateEffectPool

@@ -87,6 +87,9 @@ struct PadSample
 };
 
 PadSample readPad();
+bool rearTouchEnabled();
+// Applies immediately; enabling waits for fingers to lift before accepting a shift.
+bool setRearTouchEnabled(bool enabled);
 
 // What the game gets from one PadSample.
 struct State

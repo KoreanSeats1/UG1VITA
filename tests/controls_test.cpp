@@ -10,6 +10,8 @@
 
 static SceCtrlData s_pad;
 static int s_samplingCalls = 0, s_touchReads = 0;
+static SceTouchSamplingState s_samplingState = SCE_TOUCH_SAMPLING_STATE_STOP;
+static unsigned s_reports = 1;
 
 extern "C" int sceCtrlPeekBufferPositive(int, SceCtrlData* pad, int)
 {
@@ -19,7 +21,8 @@ extern "C" int sceCtrlPeekBufferPositive(int, SceCtrlData* pad, int)
 
 extern "C" int sceTouchSetSamplingState(SceUInt32 port, SceTouchSamplingState state)
 {
-    assert(port == SCE_TOUCH_PORT_BACK && state == SCE_TOUCH_SAMPLING_STATE_START);
+    assert(port == SCE_TOUCH_PORT_BACK);
+    s_samplingState = state;
     ++s_samplingCalls;
     return 0;
 }
@@ -29,7 +32,7 @@ extern "C" int sceTouchPeek(SceUInt32 port, SceTouchData* touch, SceUInt32)
     assert(port == SCE_TOUCH_PORT_BACK);
     ++s_touchReads;
     memset(touch, 0, sizeof(*touch));
-    touch->reportNum = 1;
+    touch->reportNum = s_reports;
     touch->report[0].x = 100; // an accidental touch on the left half
     return 1;
 }
@@ -104,5 +107,19 @@ int main(int argc, char** argv)
     assert(camera.strength[CameraRight] == camera.strength[CameraUp]);
     camera = garageCamera(0.0f, 0.0f);
     assert(camera.buttons == 0 && camera.strength[CameraRight] == 0); // release must stop rotation
+    // A menu change takes effect immediately. A hand already resting on the rear must lift first.
+    assert(setRearTouchEnabled(false));
+    const int reads = s_touchReads;
+    assert(!(readPad().inputs & (bit(RearLeft) | bit(RearRight))));
+    assert(s_touchReads == reads);
+    assert(setRearTouchEnabled(true));
+    assert(rearTouchEnabled() && s_samplingState == SCE_TOUCH_SAMPLING_STATE_START);
+    assert(!(readPad().inputs & bit(RearLeft)));
+    s_reports = 0;
+    readPad();
+    s_reports = 1;
+    assert(readPad().inputs & bit(RearLeft));
+    assert(setRearTouchEnabled(false));
+    assert(!rearTouchEnabled() && s_samplingState == SCE_TOUCH_SAMPLING_STATE_STOP);
     std::puts(rear ? "controls: rear-touch opt-in passed" : "controls: rear-touch-off and stick/d-pad checks passed");
 }
