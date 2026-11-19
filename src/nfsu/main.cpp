@@ -1,6 +1,7 @@
 #include "bankcode.h"
 #include "bench.h"
 #include "controls_menu.h"
+#include "driving_input.h"
 #include "phases.h"
 #include "prompts.h"
 #include "region.h"
@@ -326,6 +327,7 @@ static void padPollHook(x86::reg32* buttons, int* pov, float* axes)
     static const bool garageCamera = pf::Config::getBool("garage_camera", true);
     const bool orbit = garageCamera && frontEnd && !driving && !guestDword(0x007363A8);
     namespace controls = win32::controls;
+    nfsu::driving_input::poll(axes[controls::AxisX], axes[controls::AxisY], driving);
     const controls::CameraState camera = controls::garageCamera(orbit ? axes[controls::AxisZ] : 0.0f,
                                                                orbit ? axes[controls::AxisRz] : 0.0f);
     // Existing scanner configs: up/down/left/right events 0x3C/0x3D/0x3A/0x3B, action bits 29..32. The byte
@@ -361,20 +363,8 @@ static void padPollHook(x86::reg32* buttons, int* pov, float* axes)
         }
     }
 
-    const x86::reg32 hatBit = x86::reg32(1) << 31;
-    const x86::reg32 held = *buttons | (*pov >= 0 ? hatBit : 0);
-    static int s_layout = -1;
-    static x86::reg32 s_hidden = 0;
-    const int layout = (race ? 1 : 0) | (menu ? 2 : 0);
-    if (layout != s_layout)
-    {
-        s_hidden = s_layout < 0 ? 0 : held;
-        s_layout = layout;
-    }
-    s_hidden &= held;
-    *buttons &= ~s_hidden;
-    if (s_hidden & hatBit)
-        *pov = -1;
+    static controls::LayoutFilter layoutFilter;
+    layoutFilter.update(race, menu, buttons, pov);
     *buttons |= nfsu::bench::heldButtons();
 
     // Menus: Triangle (button 0) gives the menu bar the key of the screen's extra item.
@@ -438,6 +428,7 @@ int main(int, char**)
         setEnvmapSchedule();
         nfsu::prompts::configure();
         nfsu::controls_menu::configure(app);
+        nfsu::driving_input::configure(app);
         nfsu::bench::configure(app);
         nfsu::phases::configure();
         win32::Gamepad::setPollHook(padPollHook);

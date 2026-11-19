@@ -133,6 +133,19 @@ struct CameraState
 };
 CameraState garageCamera(float x, float y);
 
+// The game's steering byte: 128 centred, 0 full left, 255 full right. Uses the Vita stick's radial calibration.
+uint8_t steeringValue(float x, float y);
+
+// Prevent menu presses from becoming race actions. Held pedals and steering remain live on return to racing.
+class LayoutFilter
+{
+public:
+    void update(bool race, bool menu, uint32_t* buttons, int* pov);
+private:
+    int m_layout = -1;
+    uint32_t m_hidden = 0;
+};
+
 }
 
 }

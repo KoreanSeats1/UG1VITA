@@ -27,3 +27,8 @@ esac
     tests/controls_menu_test.cpp src/nfsu/controls_menu.cpp src/lib/controls.cpp src/platform/config.cpp \
     "$strip_sections" -o "$test_dir/controls-menu-test"
 (cd "$test_dir" && ./controls-menu-test "$test_dir/menu.cfg")
+"${CXX:-c++}" -std=c++17 -Wall -Wextra -Werror -ffunction-sections -fdata-sections -Iinclude \
+    -idirafter "$sdk_root/arm-vita-eabi/include" \
+    tests/driving_input_test.cpp src/nfsu/driving_input.cpp src/lib/controls.cpp src/platform/config.cpp \
+    "$strip_sections" -o "$test_dir/driving-input-test"
+"$test_dir/driving-input-test"

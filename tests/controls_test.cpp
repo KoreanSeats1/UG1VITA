@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstdio>
 #include <cstring>
+#include <initializer_list>
 
 static SceCtrlData s_pad;
 static int s_samplingCalls = 0, s_touchReads = 0;
@@ -121,5 +122,32 @@ int main(int argc, char** argv)
     assert(readPad().inputs & bit(RearLeft));
     assert(setRearTouchEnabled(false));
     assert(!rearTouchEnabled() && s_samplingState == SCE_TOUCH_SAMPLING_STATE_STOP);
+    assert(steeringValue(0, 0) == 128 && steeringValue(0.0039f, 0.0039f) == 128);
+    assert(steeringValue(-1, 0) == 0 && steeringValue(1, 0) == 255);
+    int previous = 128;
+    for (float amount : { 0.15f, 0.3f, 0.5f, 0.75f, 1.0f })
+    {
+        const int right = steeringValue(amount, 0), left = steeringValue(-amount, 0);
+        assert(right > previous && left < 128 && right + left >= 255 && right + left <= 256);
+        previous = right;
+    }
+    // Held R survives Resume immediately; the same menu press cannot also trigger nitrous, pause or a shift.
+    LayoutFilter filter;
+    uint32_t buttons = 1u << 7;
+    int pov = -1;
+    filter.update(true, false, &buttons, &pov);
+    assert(buttons == (1u << 7));
+    filter.update(false, true, &buttons, &pov);
+    assert(buttons == 0);
+    buttons = (1u << 7) | (1u << 6) | (1u << 2) | (1u << 9) | (1u << 12) | (1u << 15);
+    pov = 27000;
+    filter.update(true, false, &buttons, &pov);
+    assert(buttons == ((1u << 7) | (1u << 6) | (1u << 15)) && pov == 27000);
+    buttons = 0;
+    pov = -1;
+    filter.update(true, false, &buttons, &pov);
+    buttons = (1u << 2) | (1u << 9) | (1u << 12);
+    filter.update(true, false, &buttons, &pov);
+    assert(buttons == ((1u << 2) | (1u << 9) | (1u << 12))); // a fresh press remains available
     std::puts(rear ? "controls: rear-touch opt-in passed" : "controls: rear-touch-off and stick/d-pad checks passed");
 }

@@ -407,4 +407,31 @@ CameraState garageCamera(float x, float y)
     return state;
 }
 
+uint8_t steeringValue(float x, float y)
+{
+    shapeStick(x, y, 0, 10000, &x, &y);
+    return uint8_t(128 + std::lround(x * (x < 0 ? 128.0f : 127.0f)));
+}
+
+void LayoutFilter::update(bool race, bool menu, uint32_t* buttons, int* pov)
+{
+    constexpr uint32_t Hat = 1u << 31;
+    // L/R pedals and d-pad left/right steering. Accept/back, pause, shifts and other menu presses still wait
+    // for release, including Cross used to select Resume (which would otherwise activate nitrous).
+    constexpr uint32_t Continuous = (1u << 6) | (1u << 7) | (1u << 13) | (1u << 15) | Hat;
+    const uint32_t held = *buttons | (*pov >= 0 ? Hat : 0);
+    const int layout = (race ? 1 : 0) | (menu ? 2 : 0);
+    if (layout != m_layout)
+    {
+        m_hidden = m_layout < 0 ? 0 : held;
+        if (race && !menu)
+            m_hidden &= ~Continuous;
+        m_layout = layout;
+    }
+    m_hidden &= held;
+    *buttons &= ~m_hidden;
+    if (m_hidden & Hat)
+        *pov = -1;
+}
+
 }}

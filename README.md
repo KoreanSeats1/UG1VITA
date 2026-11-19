@@ -111,6 +111,11 @@ native option row's font, arrows and selection styling, applies immediately, and
 The row works with either PC or Vita button prompts. Square does not toggle rear touch.
 Other settings are read at startup; the game's controls screen does not save custom pad bindings in this port.
 
+Left-stick driving uses the Vita's calibrated analog value directly for the game's analog-steering event, with
+an 8% radial dead zone and proportional response across the full range. D-pad steering retains its digital
+priority. Returning from pause immediately accepts held throttle, brake and steering; menu confirmation, pause
+and shift buttons still wait for release to prevent unintended actions.
+
 A ready-to-copy [settings file](examples/nfsug1vita.cfg) disables rear touch. Copy it to
 `ux0:data/NFSUG1VITA/nfsug1vita.cfg`, or merge its settings into an existing file without duplicating keys.
 
@@ -128,6 +133,8 @@ and camera event scanners using your own executable (requires `unicorn==2.1.4`, 
 `.pydeps`). It checks all four directions, proportional movement, diagonal input and release events.
 `python3 tests/controls_menu_game_test.py binaries/Speed.exe` executes the original Controller entry route,
 row visibility/enabling helpers, arrow helpers, and Options notification dispatch for all three rows.
+`python3 tests/driving_game_test.py binaries/Speed.exe` checks all 256 steering levels in the original driver,
+fractional steering angles, d-pad priority, and the held-throttle event on return from a menu.
 Before releasing a custom VPK, test garage rotation in both
 directions, neutral-stick drift, race/pause transitions, D-pad shifts in a drag race, and the native row's
 appearance and saved on/off state after a restart on the Vita.
