@@ -4,7 +4,7 @@
 #include "cull.h"
 #include "movie_yuv.h"
 #include "phases.h"
-#include "prompts.h"
+#include "controls_menu.h"
 
 #include <lib/guest.h>
 #include <lib/winapp.h>
@@ -33,17 +33,16 @@ void sub_4f5730_guest(win32::WinApplication* app, x86::CPU& cpu);
 void sub_514b90_guest(win32::WinApplication* app, x86::CPU& cpu);
 void sub_58e810_guest(win32::WinApplication* app, x86::CPU& cpu);
 void sub_409cd0_guest(win32::WinApplication* app, x86::CPU& cpu);
-void sub_4e7600_guest(win32::WinApplication* app, x86::CPU& cpu);
+void sub_4d2f60_guest(win32::WinApplication* app, x86::CPU& cpu);
 
 namespace native
 {
 
-void sub_4e7600(win32::WinApplication* app, x86::CPU& cpu)
+void sub_4d2f60(win32::WinApplication* app, x86::CPU& cpu)
 {
-    const x86::reg32 bar = cpu.eax;
-    prompts::prepareMenuBar(app, cpu, bar);
-    sub_4e7600_guest(app, cpu);
-    prompts::finishMenuBar(bar);
+    const x86::reg32 controller = rc::ld32(cpu.esp + 4);
+    sub_4d2f60_guest(app, cpu);
+    controls_menu::appendRearTouch(app, cpu, controller);
 }
 
 namespace

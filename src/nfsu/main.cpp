@@ -1,5 +1,6 @@
 #include "bankcode.h"
 #include "bench.h"
+#include "controls_menu.h"
 #include "phases.h"
 #include "prompts.h"
 #include "region.h"
@@ -382,8 +383,6 @@ static void padPollHook(x86::reg32* buttons, int* pov, float* axes)
     s_previous = *buttons;
     if (menu && !vinylColours && (pressed & 1u))
         nfsu::prompts::menuTriangle();
-    if (menu && nfsu::prompts::menuSquare((pressed & (1u << 3)) != 0))
-        *buttons &= ~(1u << 3);
 }
 
 int main(int, char**)
@@ -438,6 +437,7 @@ int main(int, char**)
         win32::MemMap::addReport(reportPools);
         setEnvmapSchedule();
         nfsu::prompts::configure();
+        nfsu::controls_menu::configure(app);
         nfsu::bench::configure(app);
         nfsu::phases::configure();
         win32::Gamepad::setPollHook(padPollHook);

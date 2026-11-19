@@ -24,7 +24,6 @@ case "$(uname -s)" in
 esac
 "${CXX:-c++}" -std=c++17 -Wall -Wextra -Werror -ffunction-sections -fdata-sections -Iinclude \
     -idirafter "$sdk_root/arm-vita-eabi/include" \
-    tests/controls_menu_test.cpp src/nfsu/prompts.cpp src/lib/controls.cpp src/platform/config.cpp \
+    tests/controls_menu_test.cpp src/nfsu/controls_menu.cpp src/lib/controls.cpp src/platform/config.cpp \
     "$strip_sections" -o "$test_dir/controls-menu-test"
-cp assets/glyphs.bin "$test_dir/app0:glyphs.bin"
 (cd "$test_dir" && ./controls-menu-test "$test_dir/menu.cfg")

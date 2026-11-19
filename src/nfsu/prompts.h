@@ -2,13 +2,12 @@
 #define NFSU_PROMPTS_H_
 
 #include <x86.h>
-#include <lib/winapp.h>
 
 // Button prompts: button_prompts=vita (default) shows the Vita buttons of the port's fixed layout where the game
 // shows PC keys, button_prompts=pc keeps the game's own prompts. Glyph art: app0:glyphs.bin.
 //  - Menu bar: the key-cap textures of Next (Enter) and Back (Backspace) become Cross and Circle, the letter keys of
 //    the screens' extra items Triangle (menuTriangle gives the menu bar those keys); Quit and change colour are not
-//    shown, except the Quit artwork is reused for the Controls-only Square rear-touch action.
+//    shown and their key caps are empty.
 //  - Fonts conduitmditc_tt21i and conduitmditc_tt14i get glyph characters (codes 0x81-0x95) drawn into the free
 //    rows of their textures; strings that name PC keys are replaced with ones that use them, and the joystick's
 //    button and axis names (the controls screen) are glyphs.
@@ -32,12 +31,6 @@ void poll();
 // screen's extra item (or the tutorial in the quick race mode select) when it is shown and no text field is being
 // edited.
 void menuTriangle();
-
-// Native Controls-screen footer: Square toggles rear touch. Returns true when Square belongs to this footer,
-// so it cannot also bind a driving control. A control-binding dialog retains its normal inputs.
-bool menuSquare(bool pressed);
-void prepareMenuBar(win32::WinApplication* app, x86::CPU& cpu, x86::reg32 bar);
-void finishMenuBar(x86::reg32 bar);
 
 }}
 

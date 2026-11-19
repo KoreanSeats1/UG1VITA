@@ -104,11 +104,11 @@ menu_widescreen=off
 ### This fork's control changes
 
 Rear touch is disabled by default. D-pad **up** shifts up and **down** shifts down in drag races and with manual
-transmission. D-pad navigation in menus is unchanged. In **Options → Controller**, press **Square** on the native
-footer action **REAR TOUCH: OFF/ON** to toggle rear shifting. It uses the game's menu graphics and font, applies
-immediately, and saves `rear_touch` in `nfsug1vita.cfg` without changing other settings. Enabling touch waits for
-fingers to lift before accepting a shift. The action is unavailable while capturing a new control binding.
-The footer requires the default `button_prompts=vita`; `button_prompts=pc` retains the original PC interface.
+transmission. D-pad navigation in menus is unchanged. **Options → Controller** has a **Rear Touch Pad** row below
+Vibration. Select it with up/down, then use left/right to switch **On/Off**, just like Vibration. It uses an existing
+native option row's font, arrows and selection styling, applies immediately, and saves `rear_touch` in
+`nfsug1vita.cfg` without changing other settings. Enabling touch waits for fingers to lift before accepting a shift.
+The row works with either PC or Vita button prompts. Square does not toggle rear touch.
 Other settings are read at startup; the game's controls screen does not save custom pad bindings in this port.
 
 A ready-to-copy [settings file](examples/nfsug1vita.cfg) disables rear touch. Copy it to
@@ -122,16 +122,17 @@ the increased speed still needs a device check.
 
 Control checks on macOS/Linux: `sh tools/test-controls.sh` (set `VITASDK` if the SDK is not in `.deps/vitasdk`).
 These simulate pad/touch samples and check D-pad shifts, live rear-touch changes, config persistence and failure,
-camera directions and speed, Controls-only footer visibility, binding capture, and suppression of the reused
-footer's original Quit action.
+camera directions and speed, the native third row and arrows, and preservation of the existing two row handlers.
 `python3 tests/camera_game_test.py binaries/Speed.exe` also exercises the original game's joystick-mask builder
 and camera event scanners using your own executable (requires `unicorn==2.1.4`, which can be installed into
 `.pydeps`). It checks all four directions, proportional movement, diagonal input and release events.
-`python3 tests/controls_menu_game_test.py binaries/Speed.exe` checks the original Controls footer's tag lookup,
-Quit-key/mouse suppression and Restore Defaults dispatch.
+`python3 tests/controls_menu_game_test.py binaries/Speed.exe` executes the original Controller entry route,
+row visibility/enabling helpers, arrow helpers, and Options notification dispatch for all three rows.
 Before releasing a custom VPK, test garage rotation in both
-directions, neutral-stick drift, race/pause transitions, D-pad shifts in a drag race, and the native footer's
+directions, neutral-stick drift, race/pause transitions, D-pad shifts in a drag race, and the native row's
 appearance and saved on/off state after a restart on the Vita.
+
+Control feature requests and PS Vita hardware testing: [KoreanSeats1](https://github.com/KoreanSeats1).
 
 ### Corrupted car reflections
 
