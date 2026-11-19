@@ -138,5 +138,22 @@ int main(int argc, char** argv)
     screen("MU_CustomizeMain.fng");
     nfsu::prompts::prepareMenuBar(&app, cpu, Bar);
     assert(get(0x706fd8) == 0 && !nfsu::prompts::menuSquare(true));
+    // The page actually reached by Options -> Controller is the shared options page, category 3.
+    pf::Config::load(argv[1]);
+    screen("MU_Options_PC.fng");
+    put(Controller, 0x6c3e3c);
+    for (unsigned category = 0; category <= 10; ++category)
+    {
+        put(0x735e20, category);
+        nfsu::prompts::prepareMenuBar(&app, cpu, Bar);
+        assert(bool(get(0x706fd8)) == (category == 3));
+        assert(nfsu::prompts::menuSquare(false) == (category == 3));
+    }
+    put(0x735e20, 3);
+    nfsu::prompts::prepareMenuBar(&app, cpu, Bar);
+    assert(labelIs("REAR TOUCH: OFF"));
+    assert(nfsu::prompts::menuSquare(true));
+    nfsu::prompts::prepareMenuBar(&app, cpu, Bar);
+    assert(labelIs("REAR TOUCH: ON"));
     std::puts("controls menu: scoped native footer, live/persisted toggle, binding capture, safe Quit suppression");
 }

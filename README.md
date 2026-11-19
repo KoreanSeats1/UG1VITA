@@ -104,7 +104,7 @@ menu_widescreen=off
 ### This fork's control changes
 
 Rear touch is disabled by default. D-pad **up** shifts up and **down** shifts down in drag races and with manual
-transmission. D-pad navigation in menus is unchanged. In **Options → Controls**, press **Square** on the native
+transmission. D-pad navigation in menus is unchanged. In **Options → Controller**, press **Square** on the native
 footer action **REAR TOUCH: OFF/ON** to toggle rear shifting. It uses the game's menu graphics and font, applies
 immediately, and saves `rear_touch` in `nfsug1vita.cfg` without changing other settings. Enabling touch waits for
 fingers to lift before accepting a shift. The action is unavailable while capturing a new control binding.

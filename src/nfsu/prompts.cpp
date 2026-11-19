@@ -552,9 +552,16 @@ char s_pendingKey = 0;
 reg32 s_quitTag = 0, s_rearLabels[3] = {};
 bool s_controlsFooter = false, s_canToggleRear = false, s_rearSaveFailed = false;
 
+bool controllerOptionsScreen()
+{
+    // Options -> Controller uses the shared options package with category 3. The PC binding editor below is
+    // a separate screen reached from Controller Setup; it is not the page first opened from Options.
+    return guestNameIs(CurrentScreen, "mu_options_pc.fng") && ld32(0x00735E20) == 3;
+}
+
 bool controlsScreen()
 {
-    return guestNameIs(CurrentScreen, "pc_joypad_config.fng")
+    return controllerOptionsScreen() || guestNameIs(CurrentScreen, "pc_joypad_config.fng")
         || guestNameIs(CurrentScreen, "pc_keyboard_config.fng")
         || guestNameIs(CurrentScreen, "pc_wheel_config.fng");
 }
@@ -736,7 +743,9 @@ void prepareMenuBar(win32::WinApplication* app, x86::CPU& cpu, reg32 bar)
     st32(cpu.esp, 0x00746104);
     ::native::callGuest(app, cpu, 0x4f3f90);
     const reg32 controller = valid(cpu.eax, 0x18) ? ld32(cpu.eax + 0x14) : 0;
-    if (valid(controller, 0xa0) && ld32(controller) == 0x006CBF14)
+    if (controllerOptionsScreen() && valid(controller, 0x40) && ld32(controller) == 0x006C3E3C)
+        s_canToggleRear = true;
+    else if (valid(controller, 0xa0) && ld32(controller) == 0x006CBF14)
         s_canToggleRear = !ld8(controller + 0x80) && !ld8(controller + 0x88);
 
     cpu.eax = 0x006C3BF0; // PC_menubar.fng

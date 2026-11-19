@@ -13,6 +13,7 @@ from disasm.image import Image  # noqa: E402
 from unicorn import Uc, UC_ARCH_X86, UC_MODE_32, UC_HOOK_CODE  # noqa: E402
 from unicorn.x86_const import (UC_X86_REG_EAX, UC_X86_REG_ECX, UC_X86_REG_EDX,
                               UC_X86_REG_ESI, UC_X86_REG_ESP, UC_X86_REG_EIP)  # noqa: E402
+from unicorn.x86_const import UC_X86_REG_EDI  # noqa: E402
 
 
 def check(path):
@@ -60,12 +61,24 @@ def check(path):
             return_from_call()
         elif address == 0x4f6630:
             raise AssertionError('the former Quit action opened a dialog')
+        elif address == 0x4f6360:
+            calls.append(('screen', uc.reg_read(UC_X86_REG_EDI)))
+            return_from_call()
 
     uc.hook_add(UC_HOOK_CODE, hook)
     put(controller, vtable)
     put(controller + 0xc, 0x6c20e4)  # PC_joypad_config.fng
     put(vtable + 4, 0x4134b0)  # real Controls footer-mask filter
     put(record + 0x18, package)
+
+    # Follow the real Options selector's Controller button, rather than assuming it opens the binding editor.
+    put(back_button + 0x10, 0x7f007e43)  # hash("Controller")
+    uc.mem_write(stack, struct.pack('<5I', stop, 0x0c407210, back_button, 0, 0))
+    uc.reg_write(UC_X86_REG_ESP, stack)
+    uc.reg_write(UC_X86_REG_ECX, controller)
+    uc.emu_start(0x4d4610, stop, count=10000)
+    assert get(0x735e20) == 3 and calls == [('screen', 0x6c2c10)]  # MU_Options_PC.fng
+    calls.clear()
 
     def mask(quit_tag):
         put(0x706fd8, quit_tag)
@@ -76,6 +89,10 @@ def check(path):
 
     assert mask(0) == (1 << 4) | (1 << 15)
     assert mask(0x8bdc3c7d) == 1 | (1 << 4) | (1 << 15)
+    put(controller, 0x6c3e3c)  # real shared Options class/vtable
+    put(controller + 0xc, 0x6c2c10)
+    tags.remove(0x677392c4)  # Controller page has Quit and Back tags, no Defaults footer
+    assert mask(0x8bdc3c7d) == 1 | (1 << 4)
     put(bar + 0x40, 3)
     for i, (obj, name) in enumerate([(quit_button, 0x46fce6dd), (back_button, 0x1c7fcf8b),
                                      (default_button, 0x608b3c7f)]):
